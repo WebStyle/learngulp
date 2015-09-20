@@ -1,6 +1,6 @@
 /**
  * Learn gulp
- *
+ * This gulpfile for learn gulp and writing plugins
  */
 
 /**
@@ -17,28 +17,32 @@ var imagemin = require('gulp-imagemin');
 var sourcemaps = require('gulp-sourcemaps');
 var sass = require('gulp-sass');
 var prefix = require('gulp-autoprefixer');
+var inject = require('gulp-inject');
+var filter = require('gulp-filter');
 
 /**
  * Path Variables
  */
 var paths = {
 	dist: 'dist/',
-	sass: 'static/sass/**/*.scss',
+	sass: ['static/sass/**/*.scss'],
 	sassFolder: 'static/sass',
 	scripts: 'static/js/**/*.js',
-	images: 'static/img/*'
+	css: 'static/css/**/*.css',
+	images: 'static/img/*',
+	indexFile: 'static/index.html',
+	src: 'static'
 };
 
 /**
  * Sass task.
  * Compile sass file to css and inject to single file.
  */
-gulp.task('sass', function() {
-	gulp.src(paths.sass)
-		.on('error', function() {
-			console.log('error');
-		})
-		.pipe(gulp.dest(paths.dist));
+
+gulp.task('sass', function () {
+  gulp.src('./static/sass/**/*.scss')
+    .pipe(sass().on('error', sass.logError))
+    .pipe(gulp.dest('./css'));
 });
 
 /**
@@ -80,7 +84,7 @@ gulp.task('minify', function() {
  * Minify-css task.
  * minify all css files
  */
-gulp.task('minify-css', function() {
+gulp.task('minify-css', ['inject'], function() {
 	return gulp.src('static/css/**/*.css')
 		.pipe(minifyCss({
 			compatibility: 'ie8'
@@ -88,6 +92,19 @@ gulp.task('minify-css', function() {
 		.pipe(gulp.dest('dist/css'));
 });
 
+/**
+ * Inject task.
+ */
+gulp.task('inject', function() {
+	var target = gulp.src(paths.indexFile);
+	var sources = gulp.src(paths.css, {
+		read: false
+	});
+
+	gulp.src(paths.indexFile)
+		.pipe(inject(sources))
+		.pipe(gulp.dest(paths.dist));
+});
 /**
  * Images task.
  * Copy all static images
@@ -105,5 +122,5 @@ gulp.task('images', function() {
  * Run default task with gulp command
  */
 gulp.task('default', ['scripts', 'minify', 'minify-css', 'images', 'sass'], function() {
-	gulp.run('sass');
+
 });
